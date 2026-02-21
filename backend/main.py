@@ -1,28 +1,29 @@
-"""Call Harvey — FastAPI backend for AI cold calling."""
+"""Call Harvey — FastAPI backend for AI cold calling via Twilio + Pipecat."""
 
 import csv
 import io
 import os
+import json
 import uuid
-import asyncio
 import logging
 from datetime import datetime
 from typing import Optional
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
+from fastapi import FastAPI, WebSocket, UploadFile, File, HTTPException, Request, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from twilio.rest import Client as TwilioClient
-from twilio.twiml.voice_response import VoiceResponse
+from twilio.twiml.voice_response import VoiceResponse, Connect
 
-from pipeline import start_call_pipeline
+from pipeline import run_harvey_pipeline
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Call Harvey", version="1.0.0")
+app = FastAPI(title="Call Harvey", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,7 +33,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# In-memory store (replace with DB in production)
+# In-memory store (replace with Supabase in production)
 calls_db: dict[str, dict] = {}
 leads_db: dict[str, dict] = {}
 
@@ -41,39 +42,29 @@ twilio_client = TwilioClient(
     os.getenv("TWILIO_AUTH_TOKEN"),
 )
 
+BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
+WS_URL = BASE_URL.replace("https://", "wss://").replace("http://", "ws://")
+
 
 # --- Models ---
 
 class StartCallRequest(BaseModel):
     lead_phone: str
     lead_name: str
-    agent_name: str = "Your Agent"
+    agent_name: str = "Sam"
     brokerage: str = "Harvey Realty"
     area: str = "your area"
-
-
-class CallResult(BaseModel):
-    id: str
-    lead_phone: str
-    lead_name: str
-    status: str  # queued, in-progress, completed, failed, no-answer
-    started_at: Optional[str] = None
-    ended_at: Optional[str] = None
-    duration_seconds: Optional[int] = None
-    qualification: Optional[dict] = None
-    recording_url: Optional[str] = None
-    summary: Optional[str] = None
 
 
 # --- Endpoints ---
 
 @app.get("/")
 async def root():
-    return {"service": "Call Harvey", "status": "running"}
+    return {"service": "Call Harvey", "status": "running", "version": "2.0.0"}
 
 
 @app.post("/api/calls/start")
-async def start_call(req: StartCallRequest, background_tasks: BackgroundTasks):
+async def start_call(req: StartCallRequest):
     """Trigger an outbound AI call to a lead."""
     call_id = str(uuid.uuid4())
 
@@ -81,6 +72,9 @@ async def start_call(req: StartCallRequest, background_tasks: BackgroundTasks):
         "id": call_id,
         "lead_phone": req.lead_phone,
         "lead_name": req.lead_name,
+        "agent_name": req.agent_name,
+        "brokerage": req.brokerage,
+        "area": req.area,
         "status": "queued",
         "started_at": datetime.utcnow().isoformat(),
         "ended_at": None,
@@ -90,16 +84,13 @@ async def start_call(req: StartCallRequest, background_tasks: BackgroundTasks):
         "summary": None,
     }
 
-    base_url = os.getenv("BASE_URL", "http://localhost:8000")
-
     try:
         call = twilio_client.calls.create(
             to=req.lead_phone,
             from_=os.getenv("TWILIO_PHONE_NUMBER"),
-            url=f"{base_url}/api/calls/webhook?call_id={call_id}",
+            url=f"{BASE_URL}/api/twiml/outbound?call_id={call_id}",
             record=True,
-            recording_status_callback=f"{base_url}/api/calls/recording?call_id={call_id}",
-            status_callback=f"{base_url}/api/calls/status?call_id={call_id}",
+            status_callback=f"{BASE_URL}/api/calls/status?call_id={call_id}",
             status_callback_event=["initiated", "ringing", "answered", "completed"],
         )
         calls_db[call_id]["twilio_sid"] = call.sid
@@ -113,37 +104,104 @@ async def start_call(req: StartCallRequest, background_tasks: BackgroundTasks):
     return {"call_id": call_id, "status": "initiated"}
 
 
-@app.post("/api/calls/webhook")
-async def call_webhook(call_id: str = ""):
-    """Twilio webhook — returns TwiML to connect the call to a media stream."""
+@app.post("/api/twiml/outbound")
+async def twiml_outbound(call_id: str = ""):
+    """Returns TwiML that connects the call to our WebSocket media stream."""
     response = VoiceResponse()
+    connect = Connect()
+    connect.stream(url=f"{WS_URL}/ws/media/{call_id}")
+    response.append(connect)
+    # Keep the call alive while the stream is processing
+    response.pause(length=600)
+    return PlainTextResponse(content=str(response), media_type="application/xml")
 
-    # Connect to a WebSocket for real-time audio processing
-    base_url = os.getenv("BASE_URL", "http://localhost:8000").replace("http", "ws")
-    connect = response.connect()
-    connect.stream(
-        url=f"{base_url}/ws/audio/{call_id}",
-        track="both_tracks",
-    )
 
-    return str(response)
+@app.post("/api/twiml/inbound")
+async def twiml_inbound(request: Request):
+    """TwiML for inbound calls to the Twilio number."""
+    call_id = str(uuid.uuid4())
+    form = await request.form()
+    caller = form.get("From", "unknown")
+    
+    calls_db[call_id] = {
+        "id": call_id,
+        "lead_phone": caller,
+        "lead_name": "Caller",
+        "status": "answered",
+        "started_at": datetime.utcnow().isoformat(),
+        "direction": "inbound",
+    }
+    
+    response = VoiceResponse()
+    connect = Connect()
+    connect.stream(url=f"{WS_URL}/ws/media/{call_id}")
+    response.append(connect)
+    response.pause(length=600)
+    return PlainTextResponse(content=str(response), media_type="application/xml")
+
+
+@app.websocket("/ws/media/{call_id}")
+async def websocket_media(websocket: WebSocket, call_id: str):
+    """WebSocket endpoint for Twilio media streams — runs the Pipecat pipeline."""
+    await websocket.accept()
+    
+    # Read the initial Twilio handshake messages to get streamSid
+    stream_sid = None
+    call_data = calls_db.get(call_id, {})
+    
+    async for message in websocket.iter_text():
+        data = json.loads(message)
+        if data.get("event") == "start":
+            stream_sid = data["start"]["streamSid"]
+            logger.info(f"Media stream started: {stream_sid} for call {call_id}")
+            break
+    
+    if not stream_sid:
+        logger.error(f"No stream_sid received for call {call_id}")
+        await websocket.close()
+        return
+    
+    # Update call status
+    if call_id in calls_db:
+        calls_db[call_id]["status"] = "in-progress"
+        calls_db[call_id]["stream_sid"] = stream_sid
+    
+    lead_name = call_data.get("lead_name", "there")
+    agent_name = call_data.get("agent_name", "Sam")
+    brokerage = call_data.get("brokerage", "Harvey Realty")
+    area = call_data.get("area", "your area")
+    
+    try:
+        await run_harvey_pipeline(
+            websocket=websocket,
+            stream_sid=stream_sid,
+            lead_name=lead_name,
+            agent_name=agent_name,
+            brokerage=brokerage,
+            area=area,
+        )
+    except Exception as e:
+        logger.error(f"Pipeline error for call {call_id}: {e}")
+    finally:
+        if call_id in calls_db:
+            calls_db[call_id]["status"] = "completed"
+            calls_db[call_id]["ended_at"] = datetime.utcnow().isoformat()
 
 
 @app.post("/api/calls/status")
-async def call_status_callback(call_id: str = ""):
-    """Twilio status callback — updates call status."""
+async def call_status_callback(request: Request, call_id: str = ""):
+    """Twilio status callback."""
+    form = await request.form()
+    status = form.get("CallStatus", "unknown")
+    duration = form.get("CallDuration")
+    
     if call_id in calls_db:
-        # Twilio sends form data, but simplified here
-        calls_db[call_id]["status"] = "completed"
-        calls_db[call_id]["ended_at"] = datetime.utcnow().isoformat()
-    return {"status": "ok"}
-
-
-@app.post("/api/calls/recording")
-async def recording_callback(call_id: str = ""):
-    """Twilio recording callback — stores recording URL."""
-    if call_id in calls_db:
-        calls_db[call_id]["recording_url"] = f"https://api.twilio.com/recordings/{call_id}"
+        calls_db[call_id]["status"] = status
+        if duration:
+            calls_db[call_id]["duration_seconds"] = int(duration)
+        if status in ("completed", "busy", "no-answer", "canceled", "failed"):
+            calls_db[call_id]["ended_at"] = datetime.utcnow().isoformat()
+    
     return {"status": "ok"}
 
 
@@ -152,10 +210,7 @@ async def list_calls(limit: int = 50, offset: int = 0):
     """List all call results."""
     all_calls = list(calls_db.values())
     all_calls.sort(key=lambda c: c.get("started_at", ""), reverse=True)
-    return {
-        "calls": all_calls[offset : offset + limit],
-        "total": len(all_calls),
-    }
+    return {"calls": all_calls[offset:offset + limit], "total": len(all_calls)}
 
 
 @app.get("/api/calls/{call_id}")
@@ -168,14 +223,12 @@ async def get_call(call_id: str):
 
 @app.post("/api/leads/upload")
 async def upload_leads(file: UploadFile = File(...)):
-    """Upload a CSV of leads. Expected columns: name, phone, email, area, notes."""
+    """Upload a CSV of leads."""
     if not file.filename.endswith(".csv"):
-        raise HTTPException(status_code=400, detail="Only CSV files are supported")
+        raise HTTPException(status_code=400, detail="Only CSV files supported")
 
     content = await file.read()
-    decoded = content.decode("utf-8")
-    reader = csv.DictReader(io.StringIO(decoded))
-
+    reader = csv.DictReader(io.StringIO(content.decode("utf-8")))
     imported = []
     for row in reader:
         lead_id = str(uuid.uuid4())
@@ -200,10 +253,7 @@ async def list_leads(limit: int = 100, offset: int = 0):
     """List all leads."""
     all_leads = list(leads_db.values())
     all_leads.sort(key=lambda l: l.get("imported_at", ""), reverse=True)
-    return {
-        "leads": all_leads[offset : offset + limit],
-        "total": len(all_leads),
-    }
+    return {"leads": all_leads[offset:offset + limit], "total": len(all_leads)}
 
 
 if __name__ == "__main__":
