@@ -2,13 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&display=swap');
+
 body {
-  background: #0a0a0a;
+  background: #0A0F1E;
   color: #e5e5e5;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 ::selection {
-  background: #3b82f6;
-  color: white;
+  background: #C9A84C;
+  color: #0A0F1E;
+}
+
+/* Gold gradient divider */
+.gold-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #C9A84C40, #C9A84C, #C9A84C40, transparent);
+}
+
+/* Subtle gold glow */
+.gold-glow {
+  box-shadow: 0 0 40px rgba(201, 168, 76, 0.08);
+}
+
+/* Quote marks */
+.quote-mark {
+  font-family: 'Playfair Display', serif;
+  color: #C9A84C;
+  font-size: 4rem;
+  line-height: 1;
 }
