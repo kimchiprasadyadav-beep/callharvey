@@ -12,7 +12,10 @@ class Settings:
     TWILIO_AUTH_TOKEN: str = os.getenv("TWILIO_AUTH_TOKEN", "")
     TWILIO_PHONE_NUMBER: str = os.getenv("TWILIO_PHONE_NUMBER", "")
 
-    # Deepgram
+    # OpenAI (primary STT via Whisper)
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+
+    # Deepgram (optional fallback STT)
     DEEPGRAM_API_KEY: str = os.getenv("DEEPGRAM_API_KEY", "")
 
     # Anthropic
@@ -39,7 +42,7 @@ class Settings:
             ("TWILIO_ACCOUNT_SID", self.TWILIO_ACCOUNT_SID),
             ("TWILIO_AUTH_TOKEN", self.TWILIO_AUTH_TOKEN),
             ("TWILIO_PHONE_NUMBER", self.TWILIO_PHONE_NUMBER),
-            ("DEEPGRAM_API_KEY", self.DEEPGRAM_API_KEY),
+            ("OPENAI_API_KEY", self.OPENAI_API_KEY),
             ("ANTHROPIC_API_KEY", self.ANTHROPIC_API_KEY),
             ("ELEVENLABS_API_KEY", self.ELEVENLABS_API_KEY),
         ]

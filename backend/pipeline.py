@@ -10,7 +10,7 @@ from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineTask, PipelineParams
 from pipecat.processors.aggregators.llm_response import LLMAssistantResponseAggregator, LLMUserResponseAggregator
-from pipecat.services.deepgram import DeepgramSTTService
+from pipecat.services.openai import OpenAISTTService
 from pipecat.services.elevenlabs import ElevenLabsTTSService
 from pipecat.services.anthropic import AnthropicLLMService
 from pipecat.transports.services.daily import DailyParams, DailyTransport
@@ -60,12 +60,9 @@ class CallPipeline:
             ),
         )
 
-        stt = DeepgramSTTService(
-            api_key=os.getenv("DEEPGRAM_API_KEY"),
-            params=DeepgramSTTService.InputParams(
-                model="nova-2",
-                language="en-US",
-            ),
+        stt = OpenAISTTService(
+            api_key=os.getenv("OPENAI_API_KEY"),
+            model="whisper-1",
         )
 
         llm = AnthropicLLMService(
