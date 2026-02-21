@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Upload, Phone, BarChart3, Calendar, ChevronDown, Play } from "lucide-react";
 
 /* ─── Waitlist Form ─── */
@@ -159,6 +159,59 @@ function FAQ() {
   );
 }
 
+/* ─── Audio Player ─── */
+function AudioPlayer() {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  const toggle = () => {
+    if (!audioRef.current) return;
+    if (playing) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setPlaying(!playing);
+  };
+
+  return (
+    <div className="bg-surface border border-border rounded-xl p-8 gold-corners">
+      <audio
+        ref={audioRef}
+        src="/audio/harvey-demo.mp3"
+        onTimeUpdate={() => {
+          if (audioRef.current) {
+            setProgress((audioRef.current.currentTime / audioRef.current.duration) * 100 || 0);
+          }
+        }}
+        onEnded={() => { setPlaying(false); setProgress(0); }}
+      />
+      <Waveform />
+      {/* Progress bar */}
+      <div className="w-full h-1 bg-border rounded-full mt-4 overflow-hidden">
+        <div className="h-full bg-accent rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+      </div>
+      <div className="mt-6 flex items-center justify-center gap-4">
+        <button
+          onClick={toggle}
+          className="w-14 h-14 rounded-full bg-accent hover:bg-accent-hover flex items-center justify-center transition-colors group"
+        >
+          {playing ? (
+            <span className="text-bg font-bold text-lg">❚❚</span>
+          ) : (
+            <Play className="w-6 h-6 text-bg ml-0.5 group-hover:scale-110 transition-transform" />
+          )}
+        </button>
+        <div className="text-left">
+          <div className="text-white font-medium text-sm">Sample Call — Zillow Lead</div>
+          <div className="text-muted/50 text-xs">Harvey qualifies a buyer in Austin, TX</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Divider() {
   return <div className="gold-divider max-w-5xl mx-auto" />;
 }
@@ -298,19 +351,7 @@ export default function LandingPage() {
         <h2 className="font-serif text-3xl sm:text-4xl font-bold text-white mb-4">Hear Harvey in Action</h2>
         <p className="text-muted mb-10">Listen to a real qualification call. No scripts. Pure AI.</p>
 
-        <div className="bg-surface border border-border rounded-xl p-8 gold-corners">
-          <Waveform />
-          <div className="mt-6 flex items-center justify-center gap-4">
-            <button className="w-14 h-14 rounded-full bg-accent hover:bg-accent-hover flex items-center justify-center transition-colors group">
-              <Play className="w-6 h-6 text-bg ml-0.5 group-hover:scale-110 transition-transform" />
-            </button>
-            <div className="text-left">
-              <div className="text-white font-medium text-sm">Sample Call — Zillow Lead</div>
-              <div className="text-muted/50 text-xs">Duration: 1:24</div>
-            </div>
-          </div>
-          <p className="text-muted/40 text-xs mt-6">Audio demo coming soon — join the waitlist for early access</p>
-        </div>
+        <AudioPlayer />
       </section>
 
       <Divider />
