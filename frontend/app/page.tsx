@@ -31,7 +31,7 @@ function WaitlistForm({ className = "", cta = "DEPLOY HARVEY" }: { className?: s
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`flex gap-3 ${className}`}>
+    <form onSubmit={handleSubmit} className={`flex flex-col sm:flex-row gap-3 ${className}`}>
       <input
         type="email"
         required
@@ -43,7 +43,7 @@ function WaitlistForm({ className = "", cta = "DEPLOY HARVEY" }: { className?: s
       <button
         type="submit"
         disabled={loading}
-        className="bg-accent hover:bg-accent-hover text-bg font-bold px-6 py-3 rounded transition-colors whitespace-nowrap disabled:opacity-50 text-sm tracking-widest"
+        className="bg-accent hover:bg-accent-hover text-bg font-bold px-5 py-3 rounded transition-colors whitespace-nowrap disabled:opacity-50 text-sm tracking-widest"
       >
         {loading ? "..." : cta}
       </button>
@@ -166,7 +166,7 @@ function Divider() {
 /* ─── Main Page ─── */
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-bg overflow-x-hidden">
       {/* ═══ NAV ═══ */}
       <nav className="px-6 py-4 flex items-center justify-between max-w-7xl mx-auto">
         <div className="flex items-center gap-3">
@@ -197,7 +197,7 @@ export default function LandingPage() {
               I don&apos;t just chase leads.{" "}
               <span className="text-accent">I close them.</span>
             </h1>
-            <p className="text-lg text-muted leading-relaxed mb-8 max-w-lg">
+            <p className="text-base sm:text-lg text-muted leading-relaxed mb-8 max-w-lg">
               Harvey isn&apos;t a chatbot. He&apos;s a Closer. A ruthless, tireless AI-driven Inside Sales Agent that engages leads within milliseconds and doesn&apos;t stop until the appointment is booked.
             </p>
             <div id="deploy" className="mb-4">
