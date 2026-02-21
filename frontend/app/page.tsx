@@ -189,11 +189,11 @@ export default function LandingPage() {
       </nav>
 
       {/* ═══ HERO — Split Layout ═══ */}
-      <section className="max-w-7xl mx-auto px-6 pt-20 pb-16 lg:pt-28 lg:pb-24">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 pb-16 lg:pt-28 lg:pb-24 overflow-hidden">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* LEFT */}
           <div>
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-[1.1] mb-6">
+            <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-[1.1] mb-6 break-words">
               I don&apos;t just chase leads.{" "}
               <span className="text-accent">I close them.</span>
             </h1>
@@ -217,7 +217,7 @@ export default function LandingPage() {
 
       {/* ═══ METRICS BAR ═══ */}
       <section id="performance" className="border-y border-border bg-surface/30">
-        <div className="max-w-5xl mx-auto px-6 py-10 grid grid-cols-3 gap-6 text-center">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-3 gap-6 text-center">
           {[
             { num: "0.2s", label: "Response Time" },
             { num: "24/7", label: "Uptime" },
