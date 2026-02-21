@@ -12,7 +12,7 @@ from pipecat.pipeline.task import PipelineTask, PipelineParams
 from pipecat.processors.aggregators.llm_response import LLMAssistantResponseAggregator, LLMUserResponseAggregator
 from pipecat.services.openai import OpenAISTTService
 from pipecat.services.elevenlabs import ElevenLabsTTSService
-from pipecat.services.anthropic import AnthropicLLMService
+from pipecat.services.openai import OpenAILLMService
 from pipecat.transports.services.daily import DailyParams, DailyTransport
 
 from prompts import get_qualification_prompt
@@ -65,9 +65,9 @@ class CallPipeline:
             model="whisper-1",
         )
 
-        llm = AnthropicLLMService(
-            api_key=os.getenv("ANTHROPIC_API_KEY"),
-            model="claude-sonnet-4-20250514",
+        llm = OpenAILLMService(
+            api_key=os.getenv("OPENAI_API_KEY"),
+            model="gpt-4o",
         )
 
         tts = ElevenLabsTTSService(
