@@ -14,10 +14,19 @@ function WaitlistForm({ className = "", cta = "DEPLOY HARVEY" }: { className?: s
     if (!email) return;
     setLoading(true);
     try {
+      // Save to localStorage as fallback
       const existing = JSON.parse(localStorage.getItem("harvey_waitlist") || "[]");
       existing.push({ email, ts: new Date().toISOString() });
       localStorage.setItem("harvey_waitlist", JSON.stringify(existing));
     } catch { /* silent */ }
+    try {
+      // Save to Supabase via API route
+      await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+    } catch { /* silent - localStorage fallback already saved */ }
     setSubmitted(true);
     setLoading(false);
   };
