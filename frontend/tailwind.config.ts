@@ -14,7 +14,8 @@ const config: Config = {
         muted: "#A0A8BB",
       },
       fontFamily: {
-        serif: ["Playfair Display", "Georgia", "serif"],
+        serif: ["Bodoni Moda", "Playfair Display", "Georgia", "serif"],
+        mono: ["JetBrains Mono", "ui-monospace", "monospace"],
       },
     },
   },

@@ -1,0 +1,17 @@
+# Call Harvey — Demo Reel Audio Paths
+# Generated 2026-02-22
+
+Line 1 (Intro/Greeting):
+MEDIA:/var/folders/lw/dkn33fn115xcpcz9ggt005980000gn/T/tts-6Mp5PO/voice-1771703484269.mp3
+
+Line 2 (Price Range Question):
+MEDIA:/var/folders/lw/dkn33fn115xcpcz9ggt005980000gn/T/tts-fekVMR/voice-1771703485487.mp3
+
+Line 3 (Neighborhood Follow-up):
+MEDIA:/var/folders/lw/dkn33fn115xcpcz9ggt005980000gn/T/tts-GuklCE/voice-1771703487843.mp3
+
+Line 4 (Scheduling):
+MEDIA:/var/folders/lw/dkn33fn115xcpcz9ggt005980000gn/T/tts-QSiNOg/voice-1771703489373.mp3
+
+Line 5 (Confirmation/Close):
+MEDIA:/var/folders/lw/dkn33fn115xcpcz9ggt005980000gn/T/tts-oUgkUH/voice-1771703491493.mp3
