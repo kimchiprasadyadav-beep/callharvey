@@ -18,6 +18,7 @@ from twilio.rest import Client as TwilioClient
 from twilio.twiml.voice_response import VoiceResponse, Connect
 
 from pipeline import run_harvey_pipeline
+from sms import router as sms_router
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -41,6 +42,8 @@ twilio_client = TwilioClient(
     os.getenv("TWILIO_ACCOUNT_SID"),
     os.getenv("TWILIO_AUTH_TOKEN"),
 )
+
+app.include_router(sms_router)
 
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 WS_URL = BASE_URL.replace("https://", "wss://").replace("http://", "ws://")
