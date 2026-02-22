@@ -171,7 +171,7 @@ export default function Home() {
                 <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-accent mt-0.5 shrink-0" /> Viewing booking</li>
                 <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-accent mt-0.5 shrink-0" /> Email summaries</li>
               </ul>
-              <a href="#" className="block text-center border border-border hover:border-accent/50 rounded-xl py-3 font-semibold transition-colors">
+              <a href="/login" className="block text-center border border-border hover:border-accent/50 rounded-xl py-3 font-semibold transition-colors">
                 Start free trial
               </a>
             </div>
@@ -193,7 +193,7 @@ export default function Home() {
                 <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-accent mt-0.5 shrink-0" /> CRM integration</li>
                 <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-accent mt-0.5 shrink-0" /> Priority support</li>
               </ul>
-              <a href="#" className="block text-center bg-accent text-bg hover:bg-accent-hover rounded-xl py-3 font-semibold transition-colors">
+              <a href="/login" className="block text-center bg-accent text-bg hover:bg-accent-hover rounded-xl py-3 font-semibold transition-colors">
                 Start free trial
               </a>
             </div>
@@ -212,7 +212,7 @@ export default function Home() {
                 <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-accent mt-0.5 shrink-0" /> Custom AI voice</li>
                 <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-accent mt-0.5 shrink-0" /> Dedicated account manager</li>
               </ul>
-              <a href="#" className="block text-center border border-border hover:border-accent/50 rounded-xl py-3 font-semibold transition-colors">
+              <a href="/login" className="block text-center border border-border hover:border-accent/50 rounded-xl py-3 font-semibold transition-colors">
                 Start free trial
               </a>
             </div>
