@@ -17,7 +17,8 @@ from pydantic import BaseModel
 from twilio.rest import Client as TwilioClient
 from twilio.twiml.voice_response import VoiceResponse, Connect
 
-from pipeline import run_harvey_pipeline
+# Lazy import pipeline to avoid loading PyTorch/Silero on lightweight deployments
+# from pipeline import run_harvey_pipeline
 from sms import router as sms_router
 
 load_dotenv()
@@ -175,6 +176,7 @@ async def websocket_media(websocket: WebSocket, call_id: str):
     area = call_data.get("area", "your area")
     
     try:
+        from pipeline import run_harvey_pipeline  # lazy import
         await run_harvey_pipeline(
             websocket=websocket,
             stream_sid=stream_sid,
