@@ -1,69 +1,115 @@
-# Call Harvey 📞
+# Call Harvey - AI Real Estate Agent
 
-**AI Inside Sales Agent for Real Estate** — $299/mo instead of $2,000/mo
+> **Status:** On hold pending board direction (2026-02-23)
 
-Upload leads → AI calls within 60s → Qualifies budget/timeline/preferences → Books showings on Google Calendar
+Harvey is an AI-powered voice and SMS agent that qualifies real estate leads within 60 seconds. Built for Dubai market agents managing high Property Finder/Bayut lead volume.
 
-## Architecture
+## 🚀 Current Deployment Status
+
+**✅ Live & Working:**
+- **Frontend:** https://callharvey.co (Vercel)
+- **Backend:** https://callharvey.onrender.com (Render free tier)
+- **Auth:** Supabase magic link login
+- **Database:** Supabase (sms_conversations + sms_messages tables)
+
+**⏸️ Blocked:**
+- **Twilio:** Account under compliance review (draft response ready)
+- **Voice calls:** Requires Twilio + Mac Mini for pipecat/PyTorch
+
+## 🏗️ Architecture
 
 ```
-┌─────────────┐     ┌──────────────┐     ┌─────────────┐
-│  Next.js UI  │────▶│  FastAPI      │────▶│  Twilio      │
-│  (Dashboard) │◀────│  + Pipecat    │◀────│  (Voice)     │
-└─────────────┘     └──────┬───────┘     └─────────────┘
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐
+│   Frontend  │    │   Backend    │    │  Supabase   │
+│  (Vercel)   │◄──►│  (Render)    │◄──►│ (Database)  │
+│ Next.js 14  │    │   FastAPI    │    │ PostgreSQL  │
+└─────────────┘    └──────────────┘    └─────────────┘
                            │
-                    ┌──────┴───────┐
-                    │  Deepgram    │  STT
-                    │  Claude      │  Conversation
-                    │  ElevenLabs  │  TTS
-                    └──────────────┘
+                           ▼
+                   ┌──────────────┐
+                   │    Twilio    │
+                   │  SMS/Voice   │
+                   └──────────────┘
 ```
 
-## Quick Start
+## 📁 Project Structure
 
-### Backend
+- `/frontend` - Next.js app (callharvey.co)
+- `/backend` - FastAPI server (callharvey.onrender.com)
+- `/dubai-agent-list.csv` - 50 Dubai agents with contact info
+- `/whatsapp-messages.md` - 10 personalized outreach messages
+- `/PRD.md` - Full product requirements
+
+## 🛠️ Quick Start
+
+### Backend (Local)
 ```bash
 cd backend
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env  # fill in API keys
-uvicorn main:app --reload
+cp .env.example .env  # Add your API keys
+uvicorn main:app --host 0.0.0.0 --port 8765
 ```
 
-### Frontend
+### Frontend (Local)  
 ```bash
 cd frontend
 npm install
+cp .env.local.example .env.local  # Add Supabase keys
 npm run dev
 ```
 
-### Docker
-```bash
-cp .env.example .env  # fill in API keys
-docker-compose up
-```
+## 🔑 Required API Keys
 
-## API Keys Needed
+- **Twilio:** Account SID, Auth Token, Phone Number
+- **OpenAI:** API key for GPT-4o conversations
+- **Deepgram:** API key for STT (voice calls)
+- **ElevenLabs:** API key + Voice ID for TTS
+- **Supabase:** URL + Anon Key for auth/database
 
-| Service | Purpose | Get it at |
-|---------|---------|-----------|
-| Twilio | Outbound calls | twilio.com |
-| Deepgram | Speech-to-text | deepgram.com |
-| Anthropic | AI conversation (Claude) | console.anthropic.com |
-| ElevenLabs | Text-to-speech | elevenlabs.io |
-| Google Calendar | Booking showings | console.cloud.google.com |
+## 📊 Current State
 
-## API Endpoints
+**What Works:**
+- ✅ SMS qualification flow (Dubai tone, no emojis)
+- ✅ Supabase persistence across restarts
+- ✅ Magic link authentication  
+- ✅ Messages dashboard UI
+- ✅ Render deployment (stable URL)
 
-- `POST /api/calls/start` — Trigger a call to a lead
-- `POST /api/calls/webhook` — Twilio webhook handler
-- `GET /api/calls` — List call results
-- `POST /api/leads/upload` — Upload CSV of leads
-- `GET /api/leads` — List all leads
+**What's Blocked:**
+- ❌ Twilio account (compliance review)
+- ❌ Voice calls (needs pipecat + PyTorch locally)
+- ❌ Outbound messaging (needs Twilio)
 
-## CSV Format
+## 🚦 Deployment
 
-```csv
-name,phone,email,area,notes
-John Smith,+15551234567,john@email.com,Downtown Austin,Interested in condos
-```
+**Automatic:**
+- Frontend: Push to `main` → Vercel auto-deploys
+- Backend: Push to `main` → Render auto-deploys
+
+**Manual Steps:**
+1. Update Twilio webhooks after backend URL changes
+2. Warm up Render instance before demos (sleeps after 15min)
+3. Rotate API keys in both Render and Vercel env vars
+
+## 📈 Next Steps (If Resumed)
+
+1. **Unblock Twilio:** Send compliance response (draft ready)
+2. **Test end-to-end:** Real SMS → GPT-4o → Supabase → Reply
+3. **Dubai outreach:** Send 10 WhatsApp messages (manual + demo)
+4. **Voice pipeline:** Test pipecat on Mac Mini
+5. **Scale:** Move to paid Render/Vercel for production loads
+
+## 🏁 Monday Demo Plan (Pre-Hold)
+
+**Demo-first approach:**
+- Manual WhatsApp outreach from Rambo's number
+- Harvey qualification screenshots as proof-of-concept
+- CTA: callharvey.co for early access signup
+- Backend goes live when Twilio unblocks
+
+---
+
+**Last Updated:** 2026-02-23 by Kimchi  
+**Repository:** `github.com/kimchiprasadyadav-beep/callharvey`
